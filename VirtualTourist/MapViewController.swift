@@ -160,6 +160,12 @@ extension MapViewController : MKMapViewDelegate {
     func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
         saveMapRegion()
     }
+    
+    func mapView(mapView: MKMapView!, didDeselectAnnotationView view: MKAnnotationView!) {
+        let photoViewController = self.storyboard!.instantiateViewControllerWithIdentifier("photoViewController") as! PhotoViewController
+        self.navigationController!.pushViewController(photoViewController, animated: true)
+    }
+
 }
 
 

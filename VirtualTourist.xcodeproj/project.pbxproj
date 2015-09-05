@@ -15,8 +15,11 @@
 		BB88D1F41B9611B90067ECEA /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB88D1F31B9611B90067ECEA /* Images.xcassets */; };
 		BB88D1F71B9611B90067ECEA /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB88D1F51B9611B90067ECEA /* LaunchScreen.xib */; };
 		BB88D2031B9611B90067ECEA /* VirtualTouristTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB88D2021B9611B90067ECEA /* VirtualTouristTests.swift */; };
+		BB9AFD861B98D34E00B4487C /* Flickr.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9AFD851B98D34E00B4487C /* Flickr.swift */; };
+		BB9AFD881B9B1DA900B4487C /* Picture.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9AFD871B9B1DA900B4487C /* Picture.swift */; };
 		BBB69D3E1B962F8600A1E6CA /* Pin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB69D3D1B962F8600A1E6CA /* Pin.swift */; };
 		BBB69D421B9651EB00A1E6CA /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBB69D411B9651EB00A1E6CA /* MapKit.framework */; };
+		BBB69D441B97631D00A1E6CA /* PhotoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB69D431B97631D00A1E6CA /* PhotoViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,8 +45,11 @@
 		BB88D1FC1B9611B90067ECEA /* VirtualTouristTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VirtualTouristTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB88D2011B9611B90067ECEA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BB88D2021B9611B90067ECEA /* VirtualTouristTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualTouristTests.swift; sourceTree = "<group>"; };
+		BB9AFD851B98D34E00B4487C /* Flickr.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Flickr.swift; sourceTree = "<group>"; };
+		BB9AFD871B9B1DA900B4487C /* Picture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Picture.swift; sourceTree = "<group>"; };
 		BBB69D3D1B962F8600A1E6CA /* Pin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Pin.swift; sourceTree = "<group>"; };
 		BBB69D411B9651EB00A1E6CA /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
+		BBB69D431B97631D00A1E6CA /* PhotoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,7 +93,9 @@
 		BB88D1E61B9611B90067ECEA /* VirtualTourist */ = {
 			isa = PBXGroup;
 			children = (
+				BB9AFD851B98D34E00B4487C /* Flickr.swift */,
 				BB88D1EE1B9611B90067ECEA /* MapViewController.swift */,
+				BBB69D431B97631D00A1E6CA /* PhotoViewController.swift */,
 				BB88D1F01B9611B90067ECEA /* Main.storyboard */,
 				BBB69D3D1B962F8600A1E6CA /* Pin.swift */,
 				BB88D1F31B9611B90067ECEA /* Images.xcassets */,
@@ -96,6 +104,7 @@
 				BB3CB1831B962746002F0CCF /* CoreDataStackManager.swift */,
 				BB88D1EB1B9611B90067ECEA /* VirtualTourist.xcdatamodeld */,
 				BB88D1E71B9611B90067ECEA /* Supporting Files */,
+				BB9AFD871B9B1DA900B4487C /* Picture.swift */,
 			);
 			path = VirtualTourist;
 			sourceTree = "<group>";
@@ -229,7 +238,10 @@
 				BB88D1EF1B9611B90067ECEA /* MapViewController.swift in Sources */,
 				BB3CB1841B962746002F0CCF /* CoreDataStackManager.swift in Sources */,
 				BB88D1ED1B9611B90067ECEA /* VirtualTourist.xcdatamodeld in Sources */,
+				BB9AFD881B9B1DA900B4487C /* Picture.swift in Sources */,
 				BB88D1EA1B9611B90067ECEA /* AppDelegate.swift in Sources */,
+				BB9AFD861B98D34E00B4487C /* Flickr.swift in Sources */,
+				BBB69D441B97631D00A1E6CA /* PhotoViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:../VirtualTourist/Flickr.swift">
+   </FileRef>
+   <FileRef
       location = "self:VirtualTourist.xcodeproj">
    </FileRef>
 </Workspace>
