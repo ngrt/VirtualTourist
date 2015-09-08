@@ -26,12 +26,12 @@ class Flickr: NSObject {
     }
 
     
-    func getImageFromFlickr() {
+    func getImageFromFlickr(bbox : String, completionHandler: (picturesUrlString: [String]?, error: NSError?) ->  Void) -> NSURLSessionTask {
         println("getImageFromFlickr lancée")
         let parameters = [
             "method" : METHOD_NAME,
             "api_key" : API_KEY,
-            "bbox" : formatBbox(),
+            "bbox" : bbox,
             "safe_search" : SAFE_SEARCH,
             "extras" : EXTRAS,
             "format" : DATA_FORMAT,
@@ -48,6 +48,7 @@ class Flickr: NSObject {
         let task = session.dataTaskWithRequest(request, completionHandler: { (data, response, downloadError) -> Void in
             if let error = downloadError {
                 println("Could not complete the request : \(error)")
+                completionHandler(picturesUrlString: nil, error: error)
             } else {
                 var parsingError: NSError? = nil
                 let parsedResult = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError) as! NSDictionary
@@ -56,7 +57,10 @@ class Flickr: NSObject {
                     if let totalPages = photosDictionary["pages"] as? Int {
                         let pageLimit = min(totalPages, 40)
                         let randomPage = Int(arc4random_uniform(UInt32(pageLimit))) + 1
-                        self.getImageFromFlickrBySearchWithPage(parameters, pageNumber: randomPage)
+//                        self.getImageFromFlickrBySearchWithPage(parameters, pageNumber: randomPage)
+                        self.getImageFromFlickrBySearchWithPage(parameters, pageNumber: randomPage, completionHandler: { (ArrayOfphotoString, error) -> Void in
+                            completionHandler(picturesUrlString: ArrayOfphotoString!, error: nil)
+                        })
                         
                     }
                 }
@@ -65,9 +69,11 @@ class Flickr: NSObject {
         })
         
         task.resume()
+        
+        return task
     }
     
-    func getImageFromFlickrBySearchWithPage(parameters: [String: AnyObject], pageNumber: Int) {
+    func getImageFromFlickrBySearchWithPage(parameters: [String: AnyObject], pageNumber: Int, completionHandler: (ArrayOfphotoString: [String]?, error: NSError?) ->  Void) -> NSURLSessionTask {
         var photoURLArray =  [String]()
         
         var withPageDictionary = parameters
@@ -81,6 +87,7 @@ class Flickr: NSObject {
         let task = session.dataTaskWithRequest(request, completionHandler: { (data, response, downloadError) -> Void in
             if let error = downloadError {
                 println("Could not complete the request : \(error)")
+                completionHandler(ArrayOfphotoString: nil, error: error)
             } else {
                 var parsingError: NSError? = nil
                 let parsedResult = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError) as! NSDictionary
@@ -100,8 +107,7 @@ class Flickr: NSObject {
                                     photoURLArray.append(photoURL)
                                 }
                             }
-                            println(photoURLArray)
-                            println(photoURLArray.count)
+                            completionHandler(ArrayOfphotoString: photoURLArray, error: nil)
                         }
                     }
                     
@@ -110,11 +116,28 @@ class Flickr: NSObject {
         })
         
         task.resume()
+        
+        return task
     }
     
-    func formatBbox() -> String {
+    func formatBbox(longitude : Double, latitude : Double) -> String {
+        var minLon = 0.0
+        var maxLon = 0.0
+        var minLat = 0.0
+        var maxLat = 0.0
         
-        return "0,0,0,0"
+        var lon = longitude
+        var lat = latitude
+        
+        
+        minLon = lon - 1.0
+        maxLon = lon + 1.0
+        
+        minLat = lat - 1.0
+        maxLat = lat + 1.0
+        
+        return "\(minLon),\(minLat),\(maxLon),\(maxLat)"
+
     }
    
     
@@ -139,6 +162,11 @@ class Flickr: NSObject {
         
         return (!urlVars.isEmpty ? "?" : "") + join("&", urlVars)
     }
+    
+    struct Caches {
+        static let imageCache = ImageCache()
+    }
+
     
     // MARK: - Shared Instance
     

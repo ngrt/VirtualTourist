@@ -8,18 +8,51 @@
 
 import UIKit
 import MapKit
+import CoreData
 
-class PhotoViewController: UIViewController {
+class PhotoViewController: UIViewController, NSFetchedResultsControllerDelegate {
 
-    var pin = MKPointAnnotation()
+    var pin: Pin!
+    
+    var selectedIndexes = [NSIndexPath]()
+    
+    var insertedIndexPaths: [NSIndexPath]!
+    var deletedIndexPaths: [NSIndexPath]!
+    var updatedIndexPaths: [NSIndexPath]!
 
+    @IBOutlet weak var pictureCollection: UICollectionView!
+    
     @IBOutlet weak var mapView: MKMapView!
+    
+    @IBOutlet weak var bottomButton: UIBarButtonItem!
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        fetchedResultsController.performFetch(nil)
+        
+        fetchedResultsController.delegate = self
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        // Lay out the collection view so that cells take up 1/3 of the width,
+        // with no space in between.
+        let layout : UICollectionViewFlowLayout = UICollectionViewFlowLayout()
+        layout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 0
+        
+        let width = floor(self.pictureCollection.frame.size.width/3)
+        layout.itemSize = CGSize(width: width, height: width)
+        pictureCollection.collectionViewLayout = layout
+    }
 
-        // Do any additional setup after loading the view.
-        let coordinate = CLLocationCoordinate2DMake(28.1461248, -82.75676799999999)
+    
+    override func viewWillAppear(animated: Bool) {
+        
+        let coordinate = CLLocationCoordinate2DMake(pin.latitude, pin.longitude)
         
         zoom(coordinate)
         
@@ -27,33 +60,61 @@ class PhotoViewController: UIViewController {
         annotation.coordinate = coordinate
         self.mapView.addAnnotation(annotation)
         
-        Flickr.sharedInstance().getImageFromFlickr()
+        
+        if pin.pictures.isEmpty {
+            
+            Flickr.sharedInstance().getImageFromFlickr(Flickr.sharedInstance().formatBbox(pin.longitude, latitude: pin.latitude), completionHandler: { (picturesUrlString, error) -> Void in
+                if let error = error {
+                    //afficher une alert view avec l'errur
+                    println(error)
+                } else {
+                    var pictures = picturesUrlString!.map() { String -> Picture in
+                        
+                        let picture = Picture(imagePath: String, context: self.sharedContext)
+                        picture.pin = self.pin
+                        return picture
+                    }
+                    
+                    dispatch_async(dispatch_get_main_queue()) {
+                        self.pictureCollection.reloadData()
+                    }
+                    
+                    self.saveContext()
+                }
+            })
+        }
     }
+    
+    // MARK: - Core Data Convenience
+    
+    lazy var sharedContext: NSManagedObjectContext =  {
+        return CoreDataStackManager.sharedInstance().managedObjectContext!
+        }()
+    
+    func saveContext() {
+        CoreDataStackManager.sharedInstance().saveContext()
+    }
+    
+    lazy var fetchedResultsController: NSFetchedResultsController = {
+        
+        let fetchRequest = NSFetchRequest(entityName: "Picture")
+        
+        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin)
+        
+        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+            managedObjectContext: self.sharedContext,
+            sectionNameKeyPath: nil,
+            cacheName: nil)
+        
+        return fetchedResultsController
+        
+        }()
 
+
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
-    }
-    
-    func requestSnapshotData(mapView: MKMapView, completion: (data: NSData!, error: NSError!) -> ()) {
-        let options = MKMapSnapshotOptions()
-        options.region = mapView.region
-        options.size = mapView.frame.size
-        options.scale = UIScreen.mainScreen().scale
-        
-        let snapshotter = MKMapSnapshotter(options: options)
-        snapshotter.startWithCompletionHandler() {
-            snapshot, error in
-            
-            if error != nil {
-                completion(data: nil, error: error)
-                return
-            }
-            
-            let image = snapshot.image
-            let data = UIImagePNGRepresentation(image)
-            completion(data: data, error: nil)
-        }
     }
     
     func zoom(mapCoord : CLLocationCoordinate2D) {
@@ -61,14 +122,6 @@ class PhotoViewController: UIViewController {
         mapView.setCamera(mapCamera, animated: false)
     }
 
-    /*
-    // MARK: - Navigation
 
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
 
 }

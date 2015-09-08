@@ -14,6 +14,7 @@ class Pin: NSManagedObject {
     
     @NSManaged var latitude: CLLocationDegrees
     @NSManaged var longitude: CLLocationDegrees
+    @NSManaged var pictures: [Pin]
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?){
         super.init(entity: entity, insertIntoManagedObjectContext: context)

@@ -21,7 +21,7 @@
             </objects>
             <point key="canvasLocation" x="-1461" y="460"/>
         </scene>
-        <!--Map View Controller-->
+        <!--Virtual Tourist-->
         <scene sceneID="ufC-wZ-h7g">
             <objects>
                 <viewController id="vXZ-lx-hvc" customClass="MapViewController" customModule="VirtualTourist" customModuleProvider="target" sceneMemberID="viewController">
@@ -51,7 +51,7 @@
                             <constraint firstItem="O9g-aA-czy" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" id="Xwx-AK-1Ld"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" id="ovG-rr-6LZ"/>
+                    <navigationItem key="navigationItem" title="Virtual Tourist" id="ovG-rr-6LZ"/>
                     <connections>
                         <outlet property="mapView" destination="O9g-aA-czy" id="0Hz-q1-ykG"/>
                     </connections>
@@ -89,7 +89,7 @@
                                     <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                 </collectionViewFlowLayout>
                                 <cells>
-                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="HIe-Rf-bOm">
+                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="PictureCell" id="HIe-Rf-bOm">
                                         <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
@@ -101,6 +101,10 @@
                                         <animations/>
                                     </collectionViewCell>
                                 </cells>
+                                <connections>
+                                    <outlet property="dataSource" destination="Rlv-6y-EZ1" id="km5-sF-vvM"/>
+                                    <outlet property="delegate" destination="Rlv-6y-EZ1" id="Ma2-ky-8mL"/>
+                                </connections>
                             </collectionView>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="55C-XT-i3g">
                                 <rect key="frame" x="0.0" y="556" width="600" height="44"/>
@@ -154,65 +158,14 @@
                         </variation>
                     </view>
                     <connections>
+                        <outlet property="bottomButton" destination="36j-nL-JHB" id="yK8-9c-dEU"/>
                         <outlet property="mapView" destination="5Vg-xr-Ztv" id="0Qf-qH-ywy"/>
+                        <outlet property="pictureCollection" destination="zFv-nU-sa5" id="0Fy-Aq-8VW"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="o8O-tW-mew" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="214" y="323"/>
-        </scene>
-        <!--View Controller-->
-        <scene sceneID="laK-d7-Lcz">
-            <objects>
-                <viewController id="ajb-Zo-J5h" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="Mi3-Bl-OHk"/>
-                        <viewControllerLayoutGuide type="bottom" id="mzm-jE-oXd"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="HWp-wT-tZy">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" misplaced="YES" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="hbH-CB-1bY">
-                                <rect key="frame" x="0.0" y="196" width="600" height="404"/>
-                                <animations/>
-                                <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="ny4-X3-Hx1">
-                                    <size key="itemSize" width="50" height="50"/>
-                                    <size key="headerReferenceSize" width="0.0" height="0.0"/>
-                                    <size key="footerReferenceSize" width="0.0" height="0.0"/>
-                                    <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
-                                </collectionViewFlowLayout>
-                                <cells>
-                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="u1b-Jc-K7o">
-                                        <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
-                                        <autoresizingMask key="autoresizingMask"/>
-                                        <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                            <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
-                                            <autoresizingMask key="autoresizingMask"/>
-                                            <animations/>
-                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                        </view>
-                                        <animations/>
-                                    </collectionViewCell>
-                                </cells>
-                            </collectionView>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KWR-pQ-1N6">
-                                <rect key="frame" x="0.0" y="0.0" width="600" height="196"/>
-                                <animations/>
-                            </imageView>
-                        </subviews>
-                        <animations/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstAttribute="trailing" secondItem="hbH-CB-1bY" secondAttribute="trailing" id="N3d-zm-nha"/>
-                            <constraint firstItem="hbH-CB-1bY" firstAttribute="leading" secondItem="HWp-wT-tZy" secondAttribute="leading" id="f1g-A6-p5X"/>
-                            <constraint firstItem="mzm-jE-oXd" firstAttribute="top" secondItem="hbH-CB-1bY" secondAttribute="bottom" id="yxn-3A-00D"/>
-                        </constraints>
-                    </view>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="DiZ-z1-55n" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="145" y="1011"/>
         </scene>
     </scenes>
 </document>
