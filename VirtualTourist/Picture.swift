@@ -11,31 +11,19 @@ import MapKit
 
 class Picture: NSManagedObject {
     
-    @NSManaged var imagePath : String
+    @NSManaged var urlString : String
     @NSManaged var pin: Pin?
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?){
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
     
-    init(imagePath: String, context: NSManagedObjectContext){
+    init(urlString: String, context: NSManagedObjectContext){
         
         let entity = NSEntityDescription.entityForName("Picture", inManagedObjectContext: context)!
         
         super.init(entity: entity, insertIntoManagedObjectContext: context)
         
-        self.imagePath = imagePath
+        self.urlString = urlString
     }
-    
-    var image: UIImage? {
-        
-        get {
-            return Flickr.Caches.imageCache.imageWithIdentifier(imagePath)
-        }
-        
-        set {
-            Flickr.Caches.imageCache.storeImage(newValue, withIdentifier: imagePath)
-        }
-    }
-    
 }

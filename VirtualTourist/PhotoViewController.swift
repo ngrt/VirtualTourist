@@ -10,16 +10,15 @@ import UIKit
 import MapKit
 import CoreData
 
-class PhotoViewController: UIViewController, NSFetchedResultsControllerDelegate {
-
-    var pin: Pin!
+class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
     
-    var selectedIndexes = [NSIndexPath]()
+    var images: [UIImage]?
     
-    var insertedIndexPaths: [NSIndexPath]!
-    var deletedIndexPaths: [NSIndexPath]!
-    var updatedIndexPaths: [NSIndexPath]!
-
+    var pin: MKPointAnnotation?
+    
+    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+    
+    
     @IBOutlet weak var pictureCollection: UICollectionView!
     
     @IBOutlet weak var mapView: MKMapView!
@@ -29,10 +28,53 @@ class PhotoViewController: UIViewController, NSFetchedResultsControllerDelegate 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        fetchedResultsController.performFetch(nil)
-        
-        fetchedResultsController.delegate = self
+        self.pictureCollection.reloadData()
     }
+    
+    func createArrayOfImages(arrayOfURLs : [String]) -> [UIImage] {
+        var arrayOfImage = [UIImage]()
+        for url in arrayOfURLs {
+            let imageURL = NSURL(string: url)
+            
+            if let imageData = NSData(contentsOfURL : imageURL!) {
+                let finalImage = UIImage(data: imageData)
+                arrayOfImage.append(finalImage!)
+            }
+        }
+        
+        return arrayOfImage
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        
+        let coordinate = CLLocationCoordinate2DMake(self.appDelegate.pin!.coordinate.latitude, self.appDelegate.pin!.coordinate.longitude)
+        
+        zoom(coordinate)
+        
+        var annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        self.mapView.addAnnotation(annotation)
+    }
+    
+    @IBAction func newCollection(sender: AnyObject) {
+        FlickrClient.sharedInstance().getImageFromFlickr(FlickrClient.sharedInstance().formatBbox(self.appDelegate.pin!.coordinate.longitude, latitude: self.appDelegate.pin!.coordinate.latitude), completionHandler: { (picturesUrlString, error) -> Void in
+            var imagesToPass: [UIImage]?
+            
+            if let error = error {
+                println(error)
+            }
+            
+            imagesToPass = self.createArrayOfImages(picturesUrlString!)
+            self.appDelegate.images = imagesToPass
+            
+            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                self.pictureCollection.reloadData()
+            })
+            
+        })
+        
+    }
+    
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
@@ -49,79 +91,40 @@ class PhotoViewController: UIViewController, NSFetchedResultsControllerDelegate 
         pictureCollection.collectionViewLayout = layout
     }
 
-    
-    override func viewWillAppear(animated: Bool) {
-        
-        let coordinate = CLLocationCoordinate2DMake(pin.latitude, pin.longitude)
-        
-        zoom(coordinate)
-        
-        var annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
-        self.mapView.addAnnotation(annotation)
-        
-        
-        if pin.pictures.isEmpty {
-            
-            Flickr.sharedInstance().getImageFromFlickr(Flickr.sharedInstance().formatBbox(pin.longitude, latitude: pin.latitude), completionHandler: { (picturesUrlString, error) -> Void in
-                if let error = error {
-                    //afficher une alert view avec l'errur
-                    println(error)
-                } else {
-                    var pictures = picturesUrlString!.map() { String -> Picture in
-                        
-                        let picture = Picture(imagePath: String, context: self.sharedContext)
-                        picture.pin = self.pin
-                        return picture
-                    }
-                    
-                    dispatch_async(dispatch_get_main_queue()) {
-                        self.pictureCollection.reloadData()
-                    }
-                    
-                    self.saveContext()
-                }
-            })
-        }
+    func zoom(mapCoord : CLLocationCoordinate2D) {
+        var mapCamera = MKMapCamera(lookingAtCenterCoordinate: mapCoord, fromEyeCoordinate: mapCoord, eyeAltitude: 1000)
+        mapView.setCamera(mapCamera, animated: false)
     }
     
-    // MARK: - Core Data Convenience
-    
-    lazy var sharedContext: NSManagedObjectContext =  {
-        return CoreDataStackManager.sharedInstance().managedObjectContext!
-        }()
-    
-    func saveContext() {
-        CoreDataStackManager.sharedInstance().saveContext()
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return appDelegate.images!.count
     }
     
-    lazy var fetchedResultsController: NSFetchedResultsController = {
-        
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("pictureCell", forIndexPath: indexPath) as! PhotoAlbumCollectionViewCell
+        let image = appDelegate.images![indexPath.item]
+        cell.imageView.image = image
+        return cell
+    }
+    
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        println("ouch")
+    }
+
+    lazy var fetchedREsultsController: NSFetchedResultsController = {
         let fetchRequest = NSFetchRequest(entityName: "Picture")
         
-        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin)
+        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin!)
         
-        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
-            managedObjectContext: self.sharedContext,
-            sectionNameKeyPath: nil,
-            cacheName: nil)
+        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.sharedContext, sectionNameKeyPath: nil, cacheName: nil)
         
         return fetchedResultsController
         
         }()
 
-
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
-    func zoom(mapCoord : CLLocationCoordinate2D) {
-        var mapCamera = MKMapCamera(lookingAtCenterCoordinate: mapCoord, fromEyeCoordinate: mapCoord, eyeAltitude: 1000)
-        mapView.setCamera(mapCamera, animated: false)
-    }
-
+    lazy var sharedContext: NSManagedObjectContext = {
+        return CoreDataStackManager.sharedInstance().managedObjectContext!
+        }()
 
 
 }

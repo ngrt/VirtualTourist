@@ -16,7 +16,7 @@ let SAFE_SEARCH = "1"
 let DATA_FORMAT = "json"
 let NO_JSON_CALLBACK = "1"
 
-class Flickr: NSObject {
+class FlickrClient: NSObject {
     
     var session: NSURLSession
     
@@ -24,7 +24,6 @@ class Flickr: NSObject {
         session = NSURLSession.sharedSession()
         super.init()
     }
-
     
     func getImageFromFlickr(bbox : String, completionHandler: (picturesUrlString: [String]?, error: NSError?) ->  Void) -> NSURLSessionTask {
         println("getImageFromFlickr lancée")
@@ -39,11 +38,9 @@ class Flickr: NSObject {
             "per_page" : "21"
         ]
         
-        let urlString = BASE_URL + Flickr.escapedParameters(parameters)
+        let urlString = BASE_URL + FlickrClient.escapedParameters(parameters)
         let url = NSURL(string: urlString)!
         let request = NSURLRequest(URL: url)
-        
-        println(urlString)
         
         let task = session.dataTaskWithRequest(request, completionHandler: { (data, response, downloadError) -> Void in
             if let error = downloadError {
@@ -57,12 +54,13 @@ class Flickr: NSObject {
                     if let totalPages = photosDictionary["pages"] as? Int {
                         let pageLimit = min(totalPages, 40)
                         let randomPage = Int(arc4random_uniform(UInt32(pageLimit))) + 1
-//                        self.getImageFromFlickrBySearchWithPage(parameters, pageNumber: randomPage)
-                        self.getImageFromFlickrBySearchWithPage(parameters, pageNumber: randomPage, completionHandler: { (ArrayOfphotoString, error) -> Void in
-                            completionHandler(picturesUrlString: ArrayOfphotoString!, error: nil)
+                            self.getImageFromFlickrBySearchWithPage(parameters, pageNumber: randomPage, completionHandler: { (arrayOfphotoString, error) -> Void in
+                            println("")
+                            println(arrayOfphotoString!)
+                            completionHandler(picturesUrlString: arrayOfphotoString!, error: nil)
                         })
-                        
                     }
+                    
                 }
             }
             
@@ -73,26 +71,25 @@ class Flickr: NSObject {
         return task
     }
     
-    func getImageFromFlickrBySearchWithPage(parameters: [String: AnyObject], pageNumber: Int, completionHandler: (ArrayOfphotoString: [String]?, error: NSError?) ->  Void) -> NSURLSessionTask {
+    func getImageFromFlickrBySearchWithPage(parameters: [String: AnyObject], pageNumber: Int, completionHandler: (arrayOfphotoString: [String]?, error: NSError?) ->  Void) -> NSURLSessionTask {
         var photoURLArray =  [String]()
         
         var withPageDictionary = parameters
         withPageDictionary["page"] = pageNumber
         
-        let urlString = BASE_URL + Flickr.escapedParameters(withPageDictionary)
+        let urlString = BASE_URL + FlickrClient.escapedParameters(withPageDictionary)
         let url = NSURL(string: urlString)!
-        println(urlString)
         let request = NSURLRequest(URL: url)
+        
+        println(url)
         
         let task = session.dataTaskWithRequest(request, completionHandler: { (data, response, downloadError) -> Void in
             if let error = downloadError {
                 println("Could not complete the request : \(error)")
-                completionHandler(ArrayOfphotoString: nil, error: error)
+                completionHandler(arrayOfphotoString: nil, error: error)
             } else {
                 var parsingError: NSError? = nil
                 let parsedResult = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError) as! NSDictionary
-                
-                
                 
                 if let photosDictionary = parsedResult["photos"] as? [String: AnyObject] {
                     var totalPhotosVal = 0
@@ -107,7 +104,7 @@ class Flickr: NSObject {
                                     photoURLArray.append(photoURL)
                                 }
                             }
-                            completionHandler(ArrayOfphotoString: photoURLArray, error: nil)
+                            completionHandler(arrayOfphotoString: photoURLArray, error: nil)
                         }
                     }
                     
@@ -163,17 +160,13 @@ class Flickr: NSObject {
         return (!urlVars.isEmpty ? "?" : "") + join("&", urlVars)
     }
     
-    struct Caches {
-        static let imageCache = ImageCache()
-    }
 
-    
     // MARK: - Shared Instance
     
-    class func sharedInstance() -> Flickr {
+    class func sharedInstance() -> FlickrClient {
         
         struct Singleton {
-            static var sharedInstance = Flickr()
+            static var sharedInstance = FlickrClient()
         }
         
         return Singleton.sharedInstance

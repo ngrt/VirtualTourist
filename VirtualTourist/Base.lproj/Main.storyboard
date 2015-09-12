@@ -2,6 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="15A243d" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="lRg-QF-Cto">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
         <!--Navigation Controller-->
@@ -88,22 +89,67 @@
                                     <size key="footerReferenceSize" width="0.0" height="0.0"/>
                                     <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                 </collectionViewFlowLayout>
+                                <view key="backgroundView" contentMode="scaleToFill" id="twW-dR-KOd">
+                                    <rect key="frame" x="0.0" y="0.0" width="600" height="312"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <animations/>
+                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </view>
                                 <cells>
-                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="PictureCell" id="HIe-Rf-bOm">
+                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" restorationIdentifier="pictureCell" reuseIdentifier="pictureCell" id="HIe-Rf-bOm" customClass="PhotoAlbumCollectionViewCell" customModule="VirtualTourist" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
                                             <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                             <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="TIc-Zz-kCc">
+                                                    <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
+                                                    <animations/>
+                                                </imageView>
+                                            </subviews>
                                             <animations/>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
                                         <animations/>
+                                        <constraints>
+                                            <constraint firstAttribute="trailing" secondItem="TIc-Zz-kCc" secondAttribute="trailing" id="IEF-fE-26T"/>
+                                            <constraint firstItem="TIc-Zz-kCc" firstAttribute="leading" secondItem="HIe-Rf-bOm" secondAttribute="leading" id="Kq9-G0-cjE"/>
+                                            <constraint firstAttribute="bottomMargin" secondItem="TIc-Zz-kCc" secondAttribute="bottom" constant="-0.5" id="Pj8-ck-a1H"/>
+                                            <constraint firstAttribute="bottomMargin" secondItem="TIc-Zz-kCc" secondAttribute="bottom" constant="-1" id="jvJ-6X-W7Q"/>
+                                            <constraint firstAttribute="trailingMargin" secondItem="TIc-Zz-kCc" secondAttribute="trailing" constant="-8" id="kOt-bu-b1c"/>
+                                            <constraint firstAttribute="trailing" secondItem="TIc-Zz-kCc" secondAttribute="trailing" id="lkB-C5-lFC"/>
+                                            <constraint firstItem="TIc-Zz-kCc" firstAttribute="centerY" secondItem="HIe-Rf-bOm" secondAttribute="centerY" id="njB-bZ-65n"/>
+                                            <constraint firstItem="TIc-Zz-kCc" firstAttribute="leading" secondItem="HIe-Rf-bOm" secondAttribute="leading" id="o9H-Nw-6jI"/>
+                                            <constraint firstItem="TIc-Zz-kCc" firstAttribute="leading" secondItem="HIe-Rf-bOm" secondAttribute="leading" id="pBo-BN-hg3"/>
+                                            <constraint firstItem="TIc-Zz-kCc" firstAttribute="top" secondItem="HIe-Rf-bOm" secondAttribute="topMargin" constant="-1" id="s1D-0l-Bmw"/>
+                                            <constraint firstAttribute="bottom" secondItem="TIc-Zz-kCc" secondAttribute="bottom" id="y5J-mW-XBy"/>
+                                            <constraint firstAttribute="trailingMargin" secondItem="TIc-Zz-kCc" secondAttribute="trailing" constant="0.5" id="yIX-Sz-5zt"/>
+                                            <constraint firstItem="TIc-Zz-kCc" firstAttribute="top" secondItem="HIe-Rf-bOm" secondAttribute="top" id="yuh-1t-QhL"/>
+                                            <constraint firstAttribute="bottomMargin" secondItem="TIc-Zz-kCc" secondAttribute="bottom" constant="-8" id="zQ0-Nq-xM2"/>
+                                        </constraints>
+                                        <variation key="default">
+                                            <mask key="constraints">
+                                                <exclude reference="IEF-fE-26T"/>
+                                                <exclude reference="Kq9-G0-cjE"/>
+                                                <exclude reference="Pj8-ck-a1H"/>
+                                                <exclude reference="jvJ-6X-W7Q"/>
+                                                <exclude reference="lkB-C5-lFC"/>
+                                                <exclude reference="pBo-BN-hg3"/>
+                                                <exclude reference="s1D-0l-Bmw"/>
+                                                <exclude reference="y5J-mW-XBy"/>
+                                                <exclude reference="yIX-Sz-5zt"/>
+                                                <exclude reference="yuh-1t-QhL"/>
+                                            </mask>
+                                        </variation>
+                                        <connections>
+                                            <outlet property="imageView" destination="TIc-Zz-kCc" id="Afd-za-XLw"/>
+                                        </connections>
                                     </collectionViewCell>
                                 </cells>
                                 <connections>
-                                    <outlet property="dataSource" destination="Rlv-6y-EZ1" id="km5-sF-vvM"/>
-                                    <outlet property="delegate" destination="Rlv-6y-EZ1" id="Ma2-ky-8mL"/>
+                                    <outlet property="dataSource" destination="Rlv-6y-EZ1" id="Zdf-8C-jkF"/>
+                                    <outlet property="delegate" destination="Rlv-6y-EZ1" id="7VK-Kl-sC7"/>
                                 </connections>
                             </collectionView>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="55C-XT-i3g">
@@ -111,7 +157,11 @@
                                 <animations/>
                                 <items>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="i04-Xe-CLI"/>
-                                    <barButtonItem title="New Collection" id="36j-nL-JHB"/>
+                                    <barButtonItem title="New Collection" id="36j-nL-JHB">
+                                        <connections>
+                                            <action selector="newCollection:" destination="Rlv-6y-EZ1" id="kcP-gR-aCD"/>
+                                        </connections>
+                                    </barButtonItem>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="JjJ-Ca-I4j"/>
                                 </items>
                             </toolbar>

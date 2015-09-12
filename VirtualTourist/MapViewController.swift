@@ -15,6 +15,8 @@ class MapViewController: UIViewController {
     @IBOutlet weak var mapView: MKMapView!
     
     var arrayOfPinsToPersist = [Pin]()
+    
+    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
 
     
     override func viewDidLoad() {
@@ -44,11 +46,21 @@ class MapViewController: UIViewController {
             annotation.coordinate = coordinate
             
             annotations.append(annotation)
-            
         }
         
         // When the array is complete, we add the annotations to the map.
         self.mapView.addAnnotations(annotations)
+        
+//        FlickrClient.sharedInstance().getImageFromFlickr(FlickrClient.sharedInstance().formatBbox(48.833222, latitude: 2.277398), completionHandler: { (picturesUrlString, error) -> Void in
+//            var imagesToPass: [UIImage]?
+//            
+//            if let error = error {
+//                println(error)
+//            }
+//            
+//            imagesToPass = self.createArrayOfImages(picturesUrlString!)
+//            self.appDelegate.images = imagesToPass
+//        })
 
     }
     
@@ -118,7 +130,6 @@ class MapViewController: UIViewController {
         if let error = error {
             println("error saving context: \(error.localizedDescription)")
         }
-
     }
     
     func fetchAllPins() -> [Pin] {
@@ -152,9 +163,22 @@ class MapViewController: UIViewController {
         return CoreDataStackManager.sharedInstance().managedObjectContext!
     }()
 
+    func createArrayOfImages(arrayOfURLs : [String]) -> [UIImage] {
+        var arrayOfImage = [UIImage]()
+        for url in arrayOfURLs {
+            let imageURL = NSURL(string: url)
+            
+            if let imageData = NSData(contentsOfURL : imageURL!) {
+                let finalImage = UIImage(data: imageData)
+                arrayOfImage.append(finalImage!)
+            }
+        }
+        
+        return arrayOfImage
+    }
+
 
 }
-
 
 extension MapViewController : MKMapViewDelegate {
     func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
@@ -162,8 +186,31 @@ extension MapViewController : MKMapViewDelegate {
     }
     
     func mapView(mapView: MKMapView!, didDeselectAnnotationView view: MKAnnotationView!) {
-        let photoViewController = self.storyboard!.instantiateViewControllerWithIdentifier("photoViewController") as! PhotoViewController
-        self.navigationController!.pushViewController(photoViewController, animated: true)
+        
+        let coordinate = CLLocationCoordinate2DMake(view.annotation.coordinate.latitude, view.annotation.coordinate.longitude)
+        
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        
+        self.appDelegate.pin = annotation
+        
+        FlickrClient.sharedInstance().getImageFromFlickr(FlickrClient.sharedInstance().formatBbox(self.appDelegate.pin!.coordinate.longitude, latitude: self.appDelegate.pin!.coordinate.latitude), completionHandler: { (picturesUrlString, error) -> Void in
+            var imagesToPass: [UIImage]?
+            
+            if let error = error {
+                println(error)
+            }
+            
+            imagesToPass = self.createArrayOfImages(picturesUrlString!)
+            self.appDelegate.images = imagesToPass
+            
+            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                let photoViewController = self.storyboard!.instantiateViewControllerWithIdentifier("photoViewController") as! PhotoViewController
+                self.navigationController!.pushViewController(photoViewController, animated: true)
+            })
+
+        })
+
     }
 
 }

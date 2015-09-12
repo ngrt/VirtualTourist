@@ -10,16 +10,5 @@ import UIKit
 
 class PhotoAlbumCollectionViewCell: UICollectionViewCell
 {
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        imageView = UIImageView(frame: contentView.bounds)
-        imageView.contentMode = .ScaleAspectFit
-        contentView.addSubview(imageView)
-    }
-    
-    required init(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-    }
-    
-    var imageView: UIImageView!
+    @IBOutlet weak var imageView: UIImageView!
 }
