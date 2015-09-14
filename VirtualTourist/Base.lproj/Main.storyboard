@@ -41,6 +41,17 @@
                                     <outlet property="delegate" destination="vXZ-lx-hvc" id="SQr-Kj-BLr"/>
                                 </connections>
                             </mapView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Tap Pins To Delete" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="n63-bB-1Ph">
+                                <rect key="frame" x="233" y="523" width="135" height="31"/>
+                                <animations/>
+                                <color key="backgroundColor" red="0.20392156859999999" green="0.28627450980000002" blue="0.36862745099999999" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="31" id="L2R-bO-gex"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="HelveticaNeue-Light" family="Helvetica Neue" pointSize="17"/>
+                                <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <animations/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
@@ -50,11 +61,14 @@
                             <constraint firstAttribute="centerX" secondItem="O9g-aA-czy" secondAttribute="centerX" id="7Qg-Qp-1EB"/>
                             <constraint firstAttribute="centerY" secondItem="O9g-aA-czy" secondAttribute="centerY" id="DZN-YD-CHv"/>
                             <constraint firstItem="O9g-aA-czy" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" id="Xwx-AK-1Ld"/>
+                            <constraint firstItem="n63-bB-1Ph" firstAttribute="centerX" secondItem="O9g-aA-czy" secondAttribute="centerX" id="g5b-gO-B3o"/>
+                            <constraint firstItem="2fi-mo-0CV" firstAttribute="top" secondItem="n63-bB-1Ph" secondAttribute="bottom" constant="46" id="xpg-ZK-Uc1"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Virtual Tourist" id="ovG-rr-6LZ"/>
                     <connections>
                         <outlet property="mapView" destination="O9g-aA-czy" id="0Hz-q1-ykG"/>
+                        <outlet property="tapPinsToDeleteLabel" destination="n63-bB-1Ph" id="bTg-4X-fvL"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>
@@ -92,11 +106,20 @@
                                 <view key="backgroundView" contentMode="scaleToFill" id="twW-dR-KOd">
                                     <rect key="frame" x="0.0" y="0.0" width="600" height="312"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <subviews>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No picture for this location" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dLz-fD-npb">
+                                            <rect key="frame" x="197" y="145" width="207" height="21"/>
+                                            <animations/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                            <nil key="highlightedColor"/>
+                                        </label>
+                                    </subviews>
                                     <animations/>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 </view>
                                 <cells>
-                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" restorationIdentifier="pictureCell" reuseIdentifier="pictureCell" id="HIe-Rf-bOm" customClass="PhotoAlbumCollectionViewCell" customModule="VirtualTourist" customModuleProvider="target">
+                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" restorationIdentifier="PhotoAlbumCollectionViewCell" reuseIdentifier="PhotoAlbumCollectionViewCell" id="HIe-Rf-bOm" customClass="PhotoAlbumCollectionViewCell" customModule="VirtualTourist" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
@@ -107,12 +130,17 @@
                                                     <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                                     <animations/>
                                                 </imageView>
+                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="ANO-Y0-4RA">
+                                                    <rect key="frame" x="15" y="15" width="20" height="20"/>
+                                                    <animations/>
+                                                </activityIndicatorView>
                                             </subviews>
                                             <animations/>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
                                         <animations/>
                                         <constraints>
+                                            <constraint firstAttribute="centerX" secondItem="ANO-Y0-4RA" secondAttribute="centerX" id="4lO-Xb-chX"/>
                                             <constraint firstAttribute="trailing" secondItem="TIc-Zz-kCc" secondAttribute="trailing" id="IEF-fE-26T"/>
                                             <constraint firstItem="TIc-Zz-kCc" firstAttribute="leading" secondItem="HIe-Rf-bOm" secondAttribute="leading" id="Kq9-G0-cjE"/>
                                             <constraint firstAttribute="bottomMargin" secondItem="TIc-Zz-kCc" secondAttribute="bottom" constant="-0.5" id="Pj8-ck-a1H"/>
@@ -122,6 +150,7 @@
                                             <constraint firstItem="TIc-Zz-kCc" firstAttribute="centerY" secondItem="HIe-Rf-bOm" secondAttribute="centerY" id="njB-bZ-65n"/>
                                             <constraint firstItem="TIc-Zz-kCc" firstAttribute="leading" secondItem="HIe-Rf-bOm" secondAttribute="leading" id="o9H-Nw-6jI"/>
                                             <constraint firstItem="TIc-Zz-kCc" firstAttribute="leading" secondItem="HIe-Rf-bOm" secondAttribute="leading" id="pBo-BN-hg3"/>
+                                            <constraint firstAttribute="centerY" secondItem="ANO-Y0-4RA" secondAttribute="centerY" id="riu-XD-iK7"/>
                                             <constraint firstItem="TIc-Zz-kCc" firstAttribute="top" secondItem="HIe-Rf-bOm" secondAttribute="topMargin" constant="-1" id="s1D-0l-Bmw"/>
                                             <constraint firstAttribute="bottom" secondItem="TIc-Zz-kCc" secondAttribute="bottom" id="y5J-mW-XBy"/>
                                             <constraint firstAttribute="trailingMargin" secondItem="TIc-Zz-kCc" secondAttribute="trailing" constant="0.5" id="yIX-Sz-5zt"/>
@@ -143,6 +172,7 @@
                                             </mask>
                                         </variation>
                                         <connections>
+                                            <outlet property="activityView" destination="ANO-Y0-4RA" id="oHg-K7-NoQ"/>
                                             <outlet property="imageView" destination="TIc-Zz-kCc" id="Afd-za-XLw"/>
                                         </connections>
                                     </collectionViewCell>
@@ -159,7 +189,7 @@
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="i04-Xe-CLI"/>
                                     <barButtonItem title="New Collection" id="36j-nL-JHB">
                                         <connections>
-                                            <action selector="newCollection:" destination="Rlv-6y-EZ1" id="kcP-gR-aCD"/>
+                                            <action selector="bottomButtonClicked:" destination="Rlv-6y-EZ1" id="zZx-pN-RDS"/>
                                         </connections>
                                     </barButtonItem>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="JjJ-Ca-I4j"/>
@@ -210,6 +240,7 @@
                     <connections>
                         <outlet property="bottomButton" destination="36j-nL-JHB" id="yK8-9c-dEU"/>
                         <outlet property="mapView" destination="5Vg-xr-Ztv" id="0Qf-qH-ywy"/>
+                        <outlet property="noPictureLabel" destination="dLz-fD-npb" id="l5A-0C-ypd"/>
                         <outlet property="pictureCollection" destination="zFv-nU-sa5" id="0Fy-Aq-8VW"/>
                     </connections>
                 </viewController>

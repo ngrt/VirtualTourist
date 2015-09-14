@@ -10,28 +10,33 @@ import UIKit
 import MapKit
 import CoreData
 
-class MapViewController: UIViewController {
+class MapViewController: UIViewController, MKMapViewDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
     
+    @IBOutlet weak var tapPinsToDeleteLabel: UILabel!
     var arrayOfPinsToPersist = [Pin]()
-    
-    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
 
+    var deleteMode = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Edit", style: UIBarButtonItemStyle.Done, target: self, action: "editPins")
         
-        var longPressRecogniser = UILongPressGestureRecognizer(target: self, action: "handleLongPress:")
+        restoreMapRegion(false)
         
+
+        tapPinsToDeleteLabel.hidden = true
+            
+        var longPressRecogniser = UILongPressGestureRecognizer(target: self, action: "handleLongPress:")
+            
         longPressRecogniser.minimumPressDuration = 0.5
         mapView.addGestureRecognizer(longPressRecogniser)
-        
         handleLongPress(longPressRecogniser)
-        
-        restoreMapRegion(false)
+
+
+
         
         arrayOfPinsToPersist = fetchAllPins()
         var annotations = [MKPointAnnotation]()
@@ -50,24 +55,38 @@ class MapViewController: UIViewController {
         
         // When the array is complete, we add the annotations to the map.
         self.mapView.addAnnotations(annotations)
-        
-//        FlickrClient.sharedInstance().getImageFromFlickr(FlickrClient.sharedInstance().formatBbox(48.833222, latitude: 2.277398), completionHandler: { (picturesUrlString, error) -> Void in
-//            var imagesToPass: [UIImage]?
-//            
-//            if let error = error {
-//                println(error)
-//            }
-//            
-//            imagesToPass = self.createArrayOfImages(picturesUrlString!)
-//            self.appDelegate.images = imagesToPass
-//        })
-
     }
     
-    var filePath: String {
-        let manager = NSFileManager.defaultManager()
-        let url = manager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first as! NSURL
-        return url.URLByAppendingPathComponent("mapRegionArchive").path!
+    // MARK: -
+    func editPins() {
+        if deleteMode == false {
+            deleteMode = true
+            tapPinsToDeleteLabel.hidden = false
+            println("In Normal Mode")
+        } else {
+            deleteMode = false
+            tapPinsToDeleteLabel.hidden = true
+            println("In Delete Mode")
+        }
+        
+    }
+    
+    // MARK: - Map Region
+    func restoreMapRegion(animated: Bool) {
+        if let regionDictionary = NSKeyedUnarchiver.unarchiveObjectWithFile(filePath) as? [String : AnyObject] {
+            
+            let longitude = regionDictionary["longitude"] as! CLLocationDegrees
+            let latitude = regionDictionary["latitude"] as! CLLocationDegrees
+            let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+            
+            let longitudeDelta = regionDictionary["latitudeDelta"] as! CLLocationDegrees
+            let latitudeDelta = regionDictionary["longitudeDelta"] as! CLLocationDegrees
+            let span = MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
+            
+            let savedRegion = MKCoordinateRegion(center: center, span: span)
+            
+            mapView.setRegion(savedRegion, animated: animated)
+        }
     }
     
     func saveMapRegion() {
@@ -79,58 +98,115 @@ class MapViewController: UIViewController {
         ]
         
         NSKeyedArchiver.archiveRootObject(dictionary, toFile: filePath)
-
+        
     }
     
-
-    func restoreMapRegion(animated: Bool) {
-        if let regionDictionary = NSKeyedUnarchiver.unarchiveObjectWithFile(filePath) as? [String : AnyObject] {
+    
+    // MARK: - Mapkit Methods
+    func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
+        let annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "pin")
+        annotationView.animatesDrop = true
+        annotationView.canShowCallout = false
         
-            let longitude = regionDictionary["longitude"] as! CLLocationDegrees
-            let latitude = regionDictionary["latitude"] as! CLLocationDegrees
-            let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-        
-            let longitudeDelta = regionDictionary["latitudeDelta"] as! CLLocationDegrees
-            let latitudeDelta = regionDictionary["longitudeDelta"] as! CLLocationDegrees
-            let span = MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
-        
-            let savedRegion = MKCoordinateRegion(center: center, span: span)
-        
-            println("lat: \(latitude), lon: \(longitude), latD: \(latitudeDelta), lonD: \(longitudeDelta)")
-        
-            mapView.setRegion(savedRegion, animated: animated)
-        }
+        return annotationView
     }
-
-
-
-    //http://stackoverflow.com/questions/3959994/how-to-add-a-push-pin-to-a-mkmapviewios-when-touching
-    func handleLongPress(gestureRecognizer : UIGestureRecognizer){
-        if gestureRecognizer.state != .Began {
-            return
-        }
+    
+    func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
+        saveMapRegion()
+    }
+    
+    func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
         
-        let touchPoint = gestureRecognizer.locationInView(self.mapView)
-        let touchMapCoordinate = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
+        mapView.deselectAnnotation(view.annotation, animated: false)
         
-        let latitude = touchMapCoordinate.latitude as Double
-        let longitude = touchMapCoordinate.longitude as Double
-        
-        let pinToBeAdded = Pin(latitude: touchMapCoordinate.latitude, longitude: touchMapCoordinate.longitude, context: self.sharedContext)
+        let coordinate = CLLocationCoordinate2DMake(view.annotation.coordinate.latitude, view.annotation.coordinate.longitude)
         
         let annotation = MKPointAnnotation()
-        annotation.coordinate = touchMapCoordinate
+        annotation.coordinate = coordinate
         
-        arrayOfPinsToPersist.append(pinToBeAdded)
-        
-        mapView.addAnnotation(annotation)
-        
-        var error: NSError? = nil
-        self.sharedContext.save(&error)
-        if let error = error {
-            println("error saving context: \(error.localizedDescription)")
+        if deleteMode {
+            println("In delete mode")
+            mapView.removeAnnotation(view.annotation)
+            for pin in self.fetchAllPins() {
+                
+                if (pin.latitude == annotation.coordinate.latitude) && (pin.longitude == annotation.coordinate.longitude) {
+                    
+                    self.sharedContext.deleteObject(pin)
+                    
+                    var error: NSError? = nil
+                    self.sharedContext.save(&error)
+                    if let error = error {
+                        println("error saving context: \(error.localizedDescription)")
+                    }
+                }
+            }
+            
+        } else {
+            println("Not in delete mode")
+            FlickrClient.sharedInstance().getImageFromFlickr(view.annotation.coordinate.latitude, lon: view.annotation.coordinate.longitude, completionHandler: { (picturesUrlString, error) -> Void in
+                var imagesToPass: [UIImage]?
+                
+                if let error = error {
+                    println(error)
+                }
+                
+                dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                    let photoViewController = self.storyboard!.instantiateViewControllerWithIdentifier("photoViewController") as! PhotoViewController
+                    
+                    for pin in self.fetchAllPins() {
+                        if (pin.latitude == annotation.coordinate.latitude) && (pin.longitude == annotation.coordinate.longitude) && (picturesUrlString!.isEmpty == false) {
+                            photoViewController.pin = pin
+                            println("array of photos not empty")
+                        } else if (pin.latitude == annotation.coordinate.latitude) && (pin.longitude == annotation.coordinate.longitude) && (picturesUrlString!.isEmpty == true) {
+                            photoViewController.pin = pin
+                            photoViewController.noPictures = true
+                            println("array of photos empty")
+                        }
+                        
+                    }
+                    self.navigationController!.pushViewController(photoViewController, animated: true)
+                })
+                
+            })
         }
+        
     }
+
+    
+
+    // MARK: - Long gesture
+    //http://stackoverflow.com/questions/3959994/how-to-add-a-push-pin-to-a-mkmapviewios-when-touching
+    func handleLongPress(gestureRecognizer : UIGestureRecognizer){
+            if deleteMode == false {
+                if gestureRecognizer.state != .Began {
+                    return
+                }
+        
+                let touchPoint = gestureRecognizer.locationInView(self.mapView)
+                let touchMapCoordinate = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
+    
+                let latitude = touchMapCoordinate.latitude as Double
+                let longitude = touchMapCoordinate.longitude as Double
+        
+                let pinToBeAdded = Pin(latitude: touchMapCoordinate.latitude, longitude: touchMapCoordinate.longitude, context: self.sharedContext)
+        
+                let annotation = MKPointAnnotation()
+                annotation.coordinate = touchMapCoordinate
+        
+                arrayOfPinsToPersist.append(pinToBeAdded)
+        
+                mapView.addAnnotation(annotation)
+        
+                var error: NSError? = nil
+                self.sharedContext.save(&error)
+                if let error = error {
+                    println("error saving context: \(error.localizedDescription)")
+                }
+            }
+    }
+    
+    
+    // MARK: - Core Data
     
     func fetchAllPins() -> [Pin] {
         let error: NSErrorPointer = nil
@@ -151,68 +227,15 @@ class MapViewController: UIViewController {
     }
 
     
-    
-    func editPins() {
-        //1-afficher la view en rouge disant que tu peux supprimer des pins
-        //2-faire monter la carte
-        //3-supprimer les pins de Core Data
-        println("editPins() touched")
-    }
-    
     lazy var sharedContext: NSManagedObjectContext =  {
         return CoreDataStackManager.sharedInstance().managedObjectContext!
     }()
-
-    func createArrayOfImages(arrayOfURLs : [String]) -> [UIImage] {
-        var arrayOfImage = [UIImage]()
-        for url in arrayOfURLs {
-            let imageURL = NSURL(string: url)
-            
-            if let imageData = NSData(contentsOfURL : imageURL!) {
-                let finalImage = UIImage(data: imageData)
-                arrayOfImage.append(finalImage!)
-            }
-        }
-        
-        return arrayOfImage
-    }
-
-
-}
-
-extension MapViewController : MKMapViewDelegate {
-    func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
-        saveMapRegion()
-    }
     
-    func mapView(mapView: MKMapView!, didDeselectAnnotationView view: MKAnnotationView!) {
-        
-        let coordinate = CLLocationCoordinate2DMake(view.annotation.coordinate.latitude, view.annotation.coordinate.longitude)
-        
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
-        
-        self.appDelegate.pin = annotation
-        
-        FlickrClient.sharedInstance().getImageFromFlickr(FlickrClient.sharedInstance().formatBbox(self.appDelegate.pin!.coordinate.longitude, latitude: self.appDelegate.pin!.coordinate.latitude), completionHandler: { (picturesUrlString, error) -> Void in
-            var imagesToPass: [UIImage]?
-            
-            if let error = error {
-                println(error)
-            }
-            
-            imagesToPass = self.createArrayOfImages(picturesUrlString!)
-            self.appDelegate.images = imagesToPass
-            
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                let photoViewController = self.storyboard!.instantiateViewControllerWithIdentifier("photoViewController") as! PhotoViewController
-                self.navigationController!.pushViewController(photoViewController, animated: true)
-            })
-
-        })
-
+    var filePath: String {
+        let manager = NSFileManager.defaultManager()
+        let url = manager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first as! NSURL
+        return url.URLByAppendingPathComponent("mapRegionArchive").path!
     }
-
 }
 
 

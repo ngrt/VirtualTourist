@@ -8,15 +8,20 @@
 
 import UIKit
 
-let BASE_URL = "https://api.flickr.com/services/rest/"
-let METHOD_NAME = "flickr.photos.search"
-let API_KEY = "a31722c6b387e2068d964df76774a2e8"
-let EXTRAS = "url_m"
-let SAFE_SEARCH = "1"
-let DATA_FORMAT = "json"
-let NO_JSON_CALLBACK = "1"
+
 
 class FlickrClient: NSObject {
+    
+    struct Parameters {
+        static let BASE_URL = "https://api.flickr.com/services/rest/"
+        static let METHOD_NAME = "flickr.photos.search"
+        static let API_KEY = "a31722c6b387e2068d964df76774a2e8"
+        static let EXTRAS = "url_m"
+        static let SAFE_SEARCH = "1"
+        static let DATA_FORMAT = "json"
+        static let NO_JSON_CALLBACK = "1"
+    }
+    
     
     var session: NSURLSession
     
@@ -25,20 +30,21 @@ class FlickrClient: NSObject {
         super.init()
     }
     
-    func getImageFromFlickr(bbox : String, completionHandler: (picturesUrlString: [String]?, error: NSError?) ->  Void) -> NSURLSessionTask {
+    func getImageFromFlickr(lat : Double, lon : Double, completionHandler: (picturesUrlString: [String]?, error: NSError?) ->  Void) -> NSURLSessionTask {
         println("getImageFromFlickr lancée")
         let parameters = [
-            "method" : METHOD_NAME,
-            "api_key" : API_KEY,
-            "bbox" : bbox,
-            "safe_search" : SAFE_SEARCH,
-            "extras" : EXTRAS,
-            "format" : DATA_FORMAT,
-            "nojsoncallback" : NO_JSON_CALLBACK,
+            "method" : Parameters.METHOD_NAME,
+            "api_key" : Parameters.API_KEY,
+            "lat" : String(stringInterpolationSegment: lat),
+            "lon" : String(stringInterpolationSegment: lon),
+            "safe_search" : Parameters.SAFE_SEARCH,
+            "extras" : Parameters.EXTRAS,
+            "format" : Parameters.DATA_FORMAT,
+            "nojsoncallback" : Parameters.NO_JSON_CALLBACK,
             "per_page" : "21"
         ]
         
-        let urlString = BASE_URL + FlickrClient.escapedParameters(parameters)
+        let urlString = Parameters.BASE_URL + FlickrClient.escapedParameters(parameters)
         let url = NSURL(string: urlString)!
         let request = NSURLRequest(URL: url)
         
@@ -55,9 +61,8 @@ class FlickrClient: NSObject {
                         let pageLimit = min(totalPages, 40)
                         let randomPage = Int(arc4random_uniform(UInt32(pageLimit))) + 1
                             self.getImageFromFlickrBySearchWithPage(parameters, pageNumber: randomPage, completionHandler: { (arrayOfphotoString, error) -> Void in
-                            println("")
-                            println(arrayOfphotoString!)
                             completionHandler(picturesUrlString: arrayOfphotoString!, error: nil)
+                                println("Array of Flickr photos \(arrayOfphotoString!)")
                         })
                     }
                     
@@ -77,11 +82,9 @@ class FlickrClient: NSObject {
         var withPageDictionary = parameters
         withPageDictionary["page"] = pageNumber
         
-        let urlString = BASE_URL + FlickrClient.escapedParameters(withPageDictionary)
+        let urlString = Parameters.BASE_URL + FlickrClient.escapedParameters(withPageDictionary)
         let url = NSURL(string: urlString)!
         let request = NSURLRequest(URL: url)
-        
-        println(url)
         
         let task = session.dataTaskWithRequest(request, completionHandler: { (data, response, downloadError) -> Void in
             if let error = downloadError {
@@ -115,26 +118,6 @@ class FlickrClient: NSObject {
         task.resume()
         
         return task
-    }
-    
-    func formatBbox(longitude : Double, latitude : Double) -> String {
-        var minLon = 0.0
-        var maxLon = 0.0
-        var minLat = 0.0
-        var maxLat = 0.0
-        
-        var lon = longitude
-        var lat = latitude
-        
-        
-        minLon = lon - 1.0
-        maxLon = lon + 1.0
-        
-        minLat = lat - 1.0
-        maxLat = lat + 1.0
-        
-        return "\(minLon),\(minLat),\(maxLon),\(maxLat)"
-
     }
    
     
@@ -170,6 +153,10 @@ class FlickrClient: NSObject {
         }
         
         return Singleton.sharedInstance
+    }
+    
+    struct Caches {
+        static let imageCache = ImageCache()
     }
 
 }
