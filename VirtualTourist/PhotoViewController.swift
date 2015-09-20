@@ -12,80 +12,71 @@ import CoreData
 
 class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, NSFetchedResultsControllerDelegate {
     
-    var pictures = [Picture]()
-    
+    var imageCount = 0
     var pin: Pin!
-    
-    var noPictures = false
-    
+    var pageToGet = 1
     
     var selectedIndexes = [NSIndexPath]()
     
     var insertedIndexPaths: [NSIndexPath]!
     var deletedIndexPaths: [NSIndexPath]!
     var updatedIndexPaths: [NSIndexPath]!
-
-    
     
     @IBOutlet weak var pictureCollection: UICollectionView!
-    
     @IBOutlet weak var mapView: MKMapView!
-    
     @IBOutlet weak var bottomButton: UIBarButtonItem!
-    
-    @IBOutlet weak var noPictureLabel: UILabel!
+    @IBOutlet weak var noPhotosLabel: UILabel!
     
     //MARK: - Cycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.pictureCollection.reloadData()
-        
         fetchedResultsController.performFetch(nil)
         fetchedResultsController.delegate = self
         
         updateBottomButton()
+        
+        setTheMap()
+        
+        bottomButton.enabled = false
+        noPhotosLabel.hidden = true
     }
     
     override func viewWillAppear(animated: Bool) {
         
-        let coordinate = CLLocationCoordinate2DMake(self.pin.latitude, self.pin.longitude)
-        
-        zoom(coordinate)
-        
-        var annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
-        self.mapView.addAnnotation(annotation)
-        
-        if noPictures {
-            pictureCollection.hidden = true
-            noPictureLabel.hidden = false
-            return
-        }
-        
         if pin.pictures.isEmpty {
-            println("Pin is empty")
-            FlickrClient.sharedInstance().getImageFromFlickr(pin.latitude, lon: pin.longitude, completionHandler: { (picturesUrlString, error) -> Void in
+            FlickrClient.sharedInstance().flickrGeoSearch(pin.latitude, lon: pin.longitude, page: pageToGet, completionHandler: { (JSONResult, error) -> Void in
                 if let error = error {
-                    println(error)
+                    println("Error in flickGeoSearch \(error)")
                 } else {
-                    self.pictures = picturesUrlString!.map() { (url : String) -> Picture in
-                        let picture = Picture(imageURL: url, context: self.sharedContext)
-                        
-                        picture.pin = self.pin
-                        
-                        return picture
+                    let photos = JSONResult!["photos"] as! NSDictionary
+                    
+                    if let pagesSearchable = photos["pages"] as? Int {
+                        self.pin.pages = pagesSearchable
                     }
                     
+                    let photosDictionary = photos["photo"] as! [[String : AnyObject]]
                     
-                    dispatch_async(dispatch_get_main_queue()) {
-                        self.pictureCollection.reloadData()
+                    if photosDictionary.count == 0 {
+                        dispatch_async(dispatch_get_main_queue()) {
+                            self.noPhotosLabel.hidden = false
+                            self.view.bringSubviewToFront(self.noPhotosLabel)
+                            self.pictureCollection.hidden = true
+                        }
+                        return
                     }
                     
-                    // Save the context
-                    self.saveContext()
+                    var photo = photosDictionary.map() { (dictionary: [String : AnyObject]) -> Picture in
+                        let photo = Picture(dictionary:dictionary, context : self.sharedContext)
+                        
+                        photo.pin = self.pin
+                        
+                        return photo
                 }
-        
+                    dispatch_async(dispatch_get_main_queue()) {
+                        CoreDataStackManager.sharedInstance().saveContext()
+                    }
+                }
             })
         }
         
@@ -120,45 +111,46 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     func newCollection() {
         deleteAllPictures()
         println("newCollection() clicked")
-        FlickrClient.sharedInstance().getImageFromFlickr(pin.latitude, lon: pin.longitude, completionHandler: { (picturesUrlString, error) -> Void in
+        var pagesCanGet = pin.pages as Int
+        pageToGet = Int(arc4random_uniform(10)) + 1
+        FlickrClient.sharedInstance().flickrGeoSearch(pin.latitude, lon: pin.longitude, page: pageToGet) { (JSONResult, error) -> Void in
             if let error = error {
-                println(error)
+                
             } else {
-                self.pictures = picturesUrlString!.map() { (url : String) -> Picture in
-                    let picture = Picture(imageURL: url, context: self.sharedContext)
+                let photos = JSONResult!["photos"] as! NSDictionary
+                let photosDictionary = photos["photo"] as! [[String : AnyObject]]
+                
+                var movies = photosDictionary.map() { (dictionary: [String : AnyObject]) -> Picture in
+                    let picture = Picture(dictionary: dictionary, context: self.sharedContext)
                     
                     picture.pin = self.pin
                     
                     return picture
                 }
-                
-                
                 dispatch_async(dispatch_get_main_queue()) {
-                    self.pictureCollection.reloadData()
+                    CoreDataStackManager.sharedInstance().saveContext()
                 }
-                
-                // Save the context
-                self.saveContext()
             }
+        }
             
-        })
-
+    }
+    
+    func setTheMap() {
+        let coordinate = CLLocationCoordinate2DMake(self.pin.latitude, self.pin.longitude)
         
+        zoom(coordinate)
+        
+        var annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        self.mapView.addAnnotation(annotation)
+
     }
     
     // Delete all images in photos array
     func deleteAllPictures() {
-        for picture in self.pictures {
+        for picture in fetchedResultsController.fetchedObjects as! [Picture] {
+            picture.prepareForDeletion()
             self.sharedContext.deleteObject(picture)
-        }
-        self.pictures = [Picture]()
-        var error:NSError? = nil
-        
-        self.sharedContext.save(&error)
-        
-        if let error = error {
-            println("error saving context: \(error.localizedDescription)")
-            self.alert("Error saving deletes")
         }
     }
     
@@ -177,7 +169,9 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         selectedIndexes = [NSIndexPath]()
         
-        self.saveContext()
+        dispatch_async(dispatch_get_main_queue()) {
+            CoreDataStackManager.sharedInstance().saveContext()
+        }
         
         updateBottomButton()
         
@@ -205,47 +199,50 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     }
     
     func configureCell(cell: PhotoAlbumCollectionViewCell, atIndexPath indexPath: NSIndexPath) {
-        self.bottomButton.enabled = false
-        cell.activityView.hidesWhenStopped = true
+        var finalImage = UIImage()
         
-        var finalImage: UIImage!
-        
-        let picture = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Picture
-        
-        if picture.photoComputed != nil {
-            finalImage = picture.photoComputed
-            cell.imageView!.image = finalImage
-            self.bottomButton.enabled = true
-        } else {
-            cell.imageView!.image = UIImage(named: "defaultPicture")
-            cell.activityView.startAnimating()
-            
-            
-            
-            dispatch_async(dispatch_get_main_queue()) {
-                let imageURL = NSURL(string: picture.imageURL)
-                let imageData = NSData(contentsOfURL: imageURL!)
-                finalImage = UIImage(data: imageData!)
-                //get image
-                cell.activityView.stopAnimating()
-                cell.imageView!.image = finalImage
-                picture.photoComputed = finalImage
-                self.bottomButton.enabled = true
-            }
-            
-
-            
-            // save in core data
-            var error:NSError? = nil
-            self.sharedContext.save(&error)
-            
-            if let error = error {
-                println("error saving context: \(error.localizedDescription)")
-                self.alert("Error saving image")
-            }
-        
+        if imageCount > 0 && self.bottomButton.enabled == true {
+            self.bottomButton.enabled = false
         }
         
+        let picture = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Picture
+        self.imageCount++
+        cell.imageView!.image = nil
+        
+        if picture.photoComputed != nil {
+            cell.activityView.stopAnimating()
+            finalImage = picture.photoComputed!
+            self.imageCount--
+            if self.imageCount == 0 {
+                self.bottomButton.enabled = true
+            }
+        } else {
+            cell.activityView.startAnimating()
+            let task = FlickrClient.sharedInstance().taskForImage(FlickrClient.sharedInstance().flickrImageURL(picture), completionHandler: { (imageData, error) -> Void in
+                if let error = error {
+                    println("Error in taskforImage() : \(error.localizedDescription)")
+                }
+                
+                if let data = imageData {
+                    let image = UIImage(data: data)
+                    
+                    picture.photoComputed = image
+                    
+                    dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                        self.imageCount--
+                        if self.imageCount == 0 {
+                            self.bottomButton.enabled = true
+                        }
+                        cell.imageView.image = image
+                        cell.activityView.stopAnimating()
+                    })
+                    
+                }
+            })
+            cell.taskToCancelifCellIsReused = task
+        }
+        
+        cell.imageView!.image = finalImage
         
         if let index = find(self.selectedIndexes, indexPath) {
             cell.imageView!.alpha = 0.5
@@ -267,33 +264,32 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoAlbumCollectionViewCell", forIndexPath: indexPath) as! PhotoAlbumCollectionViewCell
-        
         self.configureCell(cell, atIndexPath: indexPath)
-        
-        
-//        dispatch_async(dispatch_get_main_queue()) {
-//            self.pictureCollection.reloadItemsAtIndexPaths([indexPath])
-//        }
-        
+
         return cell
     }
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
-        let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoAlbumCollectionViewCell
         
-        // Whenever a cell is tapped we will toggle its presence in the selectedIndexes array
-        if let index = find(selectedIndexes, indexPath) {
-            selectedIndexes.removeAtIndex(index)
-        } else {
-            selectedIndexes.append(indexPath)
+        if imageCount == 0 {
+            let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoAlbumCollectionViewCell
+            
+            // Whenever a cell is tapped we will toggle its presence in the selectedIndexes array
+            if let index = find(selectedIndexes, indexPath) {
+                selectedIndexes.removeAtIndex(index)
+            } else {
+                selectedIndexes.append(indexPath)
+            }
+            
+            cell.activityView.hidden = true
+            // Then reconfigure the cell
+            configureCell(cell, atIndexPath: indexPath)
+            
+            
+            // And update the buttom button
+            updateBottomButton()
         }
-        
-        
-        // Then reconfigure the cell
-        configureCell(cell, atIndexPath: indexPath)
-        
-        // And update the buttom button
-        updateBottomButton()
+       
 
     }
     
@@ -322,7 +318,6 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             updatedIndexPaths.append(indexPath!)
             break
         case .Move:
-            println("Move an item. We don't expect to see this in this app.")
             break
         default:
             break

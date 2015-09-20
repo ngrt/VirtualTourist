@@ -107,11 +107,11 @@
                                     <rect key="frame" x="0.0" y="0.0" width="600" height="312"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                     <subviews>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No picture for this location" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dLz-fD-npb">
-                                            <rect key="frame" x="197" y="145" width="207" height="21"/>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="No pictures for this location" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sNF-ba-0XL">
+                                            <rect key="frame" x="184" y="145" width="232" height="21"/>
                                             <animations/>
                                             <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                     </subviews>
@@ -240,7 +240,7 @@
                     <connections>
                         <outlet property="bottomButton" destination="36j-nL-JHB" id="yK8-9c-dEU"/>
                         <outlet property="mapView" destination="5Vg-xr-Ztv" id="0Qf-qH-ywy"/>
-                        <outlet property="noPictureLabel" destination="dLz-fD-npb" id="l5A-0C-ypd"/>
+                        <outlet property="noPhotosLabel" destination="sNF-ba-0XL" id="ukj-gq-CMC"/>
                         <outlet property="pictureCollection" destination="zFv-nU-sa5" id="0Fy-Aq-8VW"/>
                     </connections>
                 </viewController>

@@ -117,8 +117,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
         
-        mapView.deselectAnnotation(view.annotation, animated: false)
-        
         let coordinate = CLLocationCoordinate2DMake(view.annotation.coordinate.latitude, view.annotation.coordinate.longitude)
         
         let annotation = MKPointAnnotation()
@@ -133,39 +131,23 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     
                     self.sharedContext.deleteObject(pin)
                     
-                    var error: NSError? = nil
-                    self.sharedContext.save(&error)
-                    if let error = error {
-                        println("error saving context: \(error.localizedDescription)")
-                    }
-                }
+                    dispatch_async(dispatch_get_main_queue()) {
+                        CoreDataStackManager.sharedInstance().saveContext()
+                    }                }
             }
             
         } else {
             println("Not in delete mode")
-            FlickrClient.sharedInstance().getImageFromFlickr(view.annotation.coordinate.latitude, lon: view.annotation.coordinate.longitude, completionHandler: { (picturesUrlString, error) -> Void in
-                var imagesToPass: [UIImage]?
+            
+            let photoViewController = self.storyboard!.instantiateViewControllerWithIdentifier("photoViewController") as! PhotoViewController
+            
+            dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 
-                if let error = error {
-                    println(error)
+                for pin in self.fetchAllPins() {
+                    photoViewController.pin = pin
+                    println("array of photos not empty")
                 }
-                
-                dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                    let photoViewController = self.storyboard!.instantiateViewControllerWithIdentifier("photoViewController") as! PhotoViewController
-                    
-                    for pin in self.fetchAllPins() {
-                        if (pin.latitude == annotation.coordinate.latitude) && (pin.longitude == annotation.coordinate.longitude) && (picturesUrlString!.isEmpty == false) {
-                            photoViewController.pin = pin
-                            println("array of photos not empty")
-                        } else if (pin.latitude == annotation.coordinate.latitude) && (pin.longitude == annotation.coordinate.longitude) && (picturesUrlString!.isEmpty == true) {
-                            photoViewController.pin = pin
-                            photoViewController.noPictures = true
-                            println("array of photos empty")
-                        }
-                        
-                    }
-                    self.navigationController!.pushViewController(photoViewController, animated: true)
-                })
+                self.navigationController!.pushViewController(photoViewController, animated: true)
                 
             })
         }
@@ -235,6 +217,10 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         let manager = NSFileManager.defaultManager()
         let url = manager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first as! NSURL
         return url.URLByAppendingPathComponent("mapRegionArchive").path!
+    }
+    
+    func saveContext() {
+        CoreDataStackManager.sharedInstance().saveContext()
     }
 }
 
