@@ -52,7 +52,10 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                     let photos = JSONResult!["photos"] as! NSDictionary
                     
                     if let pagesSearchable = photos["pages"] as? Int {
-                        self.pin.pages = pagesSearchable
+                        self.sharedContext.performBlock({ () -> Void in
+                            self.pin.pages = pagesSearchable
+                        })
+                        
                     }
                     
                     let photosDictionary = photos["photo"] as! [[String : AnyObject]]
@@ -66,13 +69,17 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                         return
                     }
                     
-                    var photo = photosDictionary.map() { (dictionary: [String : AnyObject]) -> Picture in
-                        let photo = Picture(dictionary:dictionary, context : self.sharedContext)
-                        
-                        photo.pin = self.pin
-                        
-                        return photo
-                }
+                    self.sharedContext.performBlock({ () -> Void in
+                        var photo = photosDictionary.map() { (dictionary: [String : AnyObject]) -> Picture in
+                            let photo = Picture(dictionary:dictionary, context : self.sharedContext)
+                            
+                            photo.pin = self.pin
+                            
+                            return photo
+                        }
+                    })
+                    
+        
                     dispatch_async(dispatch_get_main_queue()) {
                         CoreDataStackManager.sharedInstance().saveContext()
                     }
@@ -120,13 +127,17 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                 let photos = JSONResult!["photos"] as! NSDictionary
                 let photosDictionary = photos["photo"] as! [[String : AnyObject]]
                 
-                var movies = photosDictionary.map() { (dictionary: [String : AnyObject]) -> Picture in
-                    let picture = Picture(dictionary: dictionary, context: self.sharedContext)
-                    
-                    picture.pin = self.pin
-                    
-                    return picture
-                }
+                self.sharedContext.performBlock({ () -> Void in
+                    var pictures = photosDictionary.map() { (dictionary: [String : AnyObject]) -> Picture in
+                        let picture = Picture(dictionary: dictionary, context: self.sharedContext)
+                        
+                        picture.pin = self.pin
+                        
+                        return picture
+                    }
+
+                })
+                
                 dispatch_async(dispatch_get_main_queue()) {
                     CoreDataStackManager.sharedInstance().saveContext()
                 }
