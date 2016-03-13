@@ -29,7 +29,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
 
         tapPinsToDeleteLabel.hidden = true
             
-        var longPressRecogniser = UILongPressGestureRecognizer(target: self, action: "handleLongPress:")
+        let longPressRecogniser = UILongPressGestureRecognizer(target: self, action: "handleLongPress:")
             
         longPressRecogniser.minimumPressDuration = 0.5
         mapView.addGestureRecognizer(longPressRecogniser)
@@ -47,7 +47,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             let coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
             
             // Here we create the annotation and set its coordiate, title, and subtitle properties
-            var annotation = MKPointAnnotation()
+            let annotation = MKPointAnnotation()
             annotation.coordinate = coordinate
             
             annotations.append(annotation)
@@ -62,11 +62,11 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         if deleteMode == false {
             deleteMode = true
             tapPinsToDeleteLabel.hidden = false
-            println("In Normal Mode")
+            print("In Normal Mode")
         } else {
             deleteMode = false
             tapPinsToDeleteLabel.hidden = true
-            println("In Delete Mode")
+            print("In Delete Mode")
         }
         
     }
@@ -103,7 +103,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     
     // MARK: - Mapkit Methods
-    func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
+    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
         let annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "pin")
         annotationView.animatesDrop = true
         annotationView.canShowCallout = false
@@ -111,20 +111,20 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         return annotationView
     }
     
-    func mapView(mapView: MKMapView!, regionDidChangeAnimated animated: Bool) {
+    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
         saveMapRegion()
     }
     
-    func mapView(mapView: MKMapView!, didSelectAnnotationView view: MKAnnotationView!) {
+    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
         
-        let coordinate = CLLocationCoordinate2DMake(view.annotation.coordinate.latitude, view.annotation.coordinate.longitude)
+        let coordinate = CLLocationCoordinate2DMake(view.annotation!.coordinate.latitude, view.annotation!.coordinate.longitude)
         
         let annotation = MKPointAnnotation()
         annotation.coordinate = coordinate
         
         if deleteMode {
-            println("In delete mode")
-            mapView.removeAnnotation(view.annotation)
+            print("In delete mode")
+            mapView.removeAnnotation(view.annotation!)
             for pin in self.fetchAllPins() {
                 
                 if (pin.latitude == annotation.coordinate.latitude) && (pin.longitude == annotation.coordinate.longitude) {
@@ -137,7 +137,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             }
             
         } else {
-            println("Not in delete mode")
+            print("Not in delete mode")
             
             let photoViewController = self.storyboard!.instantiateViewControllerWithIdentifier("photoViewController") as! PhotoViewController
             
@@ -145,7 +145,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 
                 for pin in self.fetchAllPins() {
                     photoViewController.pin = pin
-                    println("array of photos not empty")
+                    print("array of photos not empty")
                 }
                 self.navigationController!.pushViewController(photoViewController, animated: true)
                 
@@ -167,8 +167,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 let touchPoint = gestureRecognizer.locationInView(self.mapView)
                 let touchMapCoordinate = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
     
-                let latitude = touchMapCoordinate.latitude as Double
-                let longitude = touchMapCoordinate.longitude as Double
+                _ = touchMapCoordinate.latitude as Double
+                _ = touchMapCoordinate.longitude as Double
         
                 let pinToBeAdded = Pin(latitude: touchMapCoordinate.latitude, longitude: touchMapCoordinate.longitude, context: self.sharedContext)
         
@@ -180,9 +180,13 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 mapView.addAnnotation(annotation)
         
                 var error: NSError? = nil
-                self.sharedContext.save(&error)
+                do {
+                    try self.sharedContext.save()
+                } catch let error1 as NSError {
+                    error = error1
+                }
                 if let error = error {
-                    println("error saving context: \(error.localizedDescription)")
+                    print("error saving context: \(error.localizedDescription)")
                 }
             }
     }
@@ -197,11 +201,17 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         let fetchRequest = NSFetchRequest(entityName: "Pin")
         
         // Execute the Fetch Request
-        let results = sharedContext.executeFetchRequest(fetchRequest, error: error)
+        let results: [AnyObject]?
+        do {
+            results = try sharedContext.executeFetchRequest(fetchRequest)
+        } catch let error1 as NSError {
+            error.memory = error1
+            results = nil
+        }
         
         // Check for Errors
         if error != nil {
-            println("Error in fectchAllActors(): \(error)")
+            print("Error in fectchAllActors(): \(error)")
         }
         
         // Return the results, cast to an array of Person objects
@@ -215,7 +225,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     var filePath: String {
         let manager = NSFileManager.defaultManager()
-        let url = manager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask).first as! NSURL
+        let url = manager.URLsForDirectory(.DocumentDirectory,
+		inDomains: .UserDomainMask).first as NSURL!
         return url.URLByAppendingPathComponent("mapRegionArchive").path!
     }
     

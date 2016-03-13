@@ -31,7 +31,10 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        fetchedResultsController.performFetch(nil)
+        do {
+            try fetchedResultsController.performFetch()
+        } catch _ {
+        }
         fetchedResultsController.delegate = self
         
         updateBottomButton()
@@ -47,7 +50,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         if pin.pictures.isEmpty {
             FlickrClient.sharedInstance().flickrGeoSearch(pin.latitude, lon: pin.longitude, page: pageToGet, completionHandler: { (JSONResult, error) -> Void in
                 if let error = error {
-                    println("Error in flickGeoSearch \(error)")
+                    print("Error in flickGeoSearch \(error)")
                 } else {
                     let photos = JSONResult!["photos"] as! NSDictionary
                     
@@ -70,7 +73,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                     }
                     
                     self.sharedContext.performBlock({ () -> Void in
-                        var photo = photosDictionary.map() { (dictionary: [String : AnyObject]) -> Picture in
+                        _ = photosDictionary.map() { (dictionary: [String : AnyObject]) -> Picture in
                             let photo = Picture(dictionary:dictionary, context : self.sharedContext)
                             
                             photo.pin = self.pin
@@ -117,18 +120,18 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     func newCollection() {
         deleteAllPictures()
-        println("newCollection() clicked")
-        var pagesCanGet = pin.pages as Int
+        print("newCollection() clicked")
+        _ = pin.pages as Int
         pageToGet = Int(arc4random_uniform(10)) + 1
         FlickrClient.sharedInstance().flickrGeoSearch(pin.latitude, lon: pin.longitude, page: pageToGet) { (JSONResult, error) -> Void in
-            if let error = error {
+            if let _ = error {
                 
             } else {
                 let photos = JSONResult!["photos"] as! NSDictionary
                 let photosDictionary = photos["photo"] as! [[String : AnyObject]]
                 
                 self.sharedContext.performBlock({ () -> Void in
-                    var pictures = photosDictionary.map() { (dictionary: [String : AnyObject]) -> Picture in
+                    _ = photosDictionary.map() { (dictionary: [String : AnyObject]) -> Picture in
                         let picture = Picture(dictionary: dictionary, context: self.sharedContext)
                         
                         picture.pin = self.pin
@@ -151,7 +154,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         zoom(coordinate)
         
-        var annotation = MKPointAnnotation()
+        let annotation = MKPointAnnotation()
         annotation.coordinate = coordinate
         self.mapView.addAnnotation(annotation)
 
@@ -166,7 +169,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     }
     
     func deleteSelectedPictures() {
-        println("deleteSelectedPictures() clicked")
+        print("deleteSelectedPictures() clicked")
         var picturesToDelete = [Picture]()
         
         for indexPath in selectedIndexes {
@@ -205,7 +208,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     }
     
     func zoom(mapCoord : CLLocationCoordinate2D) {
-        var mapCamera = MKMapCamera(lookingAtCenterCoordinate: mapCoord, fromEyeCoordinate: mapCoord, eyeAltitude: 1000)
+        let mapCamera = MKMapCamera(lookingAtCenterCoordinate: mapCoord, fromEyeCoordinate: mapCoord, eyeAltitude: 1000)
         mapView.setCamera(mapCamera, animated: false)
     }
     
@@ -231,7 +234,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             cell.activityView.startAnimating()
             let task = FlickrClient.sharedInstance().taskForImage(FlickrClient.sharedInstance().flickrImageURL(picture), completionHandler: { (imageData, error) -> Void in
                 if let error = error {
-                    println("Error in taskforImage() : \(error.localizedDescription)")
+                    print("Error in taskforImage() : \(error.localizedDescription)")
                 }
                 
                 if let data = imageData {
@@ -255,7 +258,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         cell.imageView!.image = finalImage
         
-        if let index = find(self.selectedIndexes, indexPath) {
+        if let _ = self.selectedIndexes.indexOf(indexPath) {
             cell.imageView!.alpha = 0.5
         } else {
             cell.imageView!.alpha = 1.0
@@ -269,7 +272,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     }
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let sectionInfo = self.fetchedResultsController.sections![section] as! NSFetchedResultsSectionInfo
+        let sectionInfo = self.fetchedResultsController.sections![section] 
         return sectionInfo.numberOfObjects
     }
     
@@ -286,7 +289,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoAlbumCollectionViewCell
             
             // Whenever a cell is tapped we will toggle its presence in the selectedIndexes array
-            if let index = find(selectedIndexes, indexPath) {
+            if let index = selectedIndexes.indexOf(indexPath) {
                 selectedIndexes.removeAtIndex(index)
             } else {
                 selectedIndexes.append(indexPath)
@@ -310,16 +313,27 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         deletedIndexPaths = [NSIndexPath]()
         updatedIndexPaths = [NSIndexPath]()
         
-        println("in controllerWillChangeContent")
+        print("in controllerWillChangeContent")
     }
 
     //MARK: - NSFetchedResultsController Delegate
     
-    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+	//2
+	func controller(controller: NSFetchedResultsController,
+		didChangeObject anObject: AnyObject, //change from NSManagedObject
+		atIndexPath indexPath: NSIndexPath?,
+		forChangeType type: NSFetchedResultsChangeType,
+	 	newIndexPath: NSIndexPath?) {
         
-        switch type{
-            
-        case .Insert:
+		switch type{
+		
+		
+		
+		
+		
+		
+		
+		case .Insert:
             insertedIndexPaths.append(newIndexPath!)
             break
         case .Delete:
@@ -330,14 +344,16 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             break
         case .Move:
             break
-        default:
-            break
+			
+		//Not needed since all conditions are covered
+		//default:
+        //    break
         }
     }
     
     func controllerDidChangeContent(controller: NSFetchedResultsController) {
         
-        println("in controllerDidChangeContent. changes.count: \(insertedIndexPaths.count + deletedIndexPaths.count)")
+        print("in controllerDidChangeContent. changes.count: \(insertedIndexPaths.count + deletedIndexPaths.count)")
         
         pictureCollection.performBatchUpdates({() -> Void in
             
