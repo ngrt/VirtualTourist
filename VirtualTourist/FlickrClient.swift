@@ -42,10 +42,10 @@ class FlickrClient: NSObject {
         let url = flickrSearchURLForPlaceID(lat, lon: lon, page: page)
         let request = NSURLRequest(URL: url)
         let task = session.dataTaskWithRequest(request) {data, response, downloadError in
-            if let error = downloadError {
+            if let _ = downloadError {
                 completionHandler(result: nil, error: downloadError)
             } else {
-                FlickrClient.parseJSONWithCompletionHandler(data, completionHandler: completionHandler)
+                FlickrClient.parseJSONWithCompletionHandler(data!, completionHandler: completionHandler)
             }
         }
         task.resume()
@@ -59,7 +59,7 @@ class FlickrClient: NSObject {
         let task = session.dataTaskWithRequest(request) {data, response, downloadError in
             
             if let error = downloadError {
-                println("Error in taskForImageWithSize : \(error)")
+                print("Error in taskForImageWithSize : \(error)")
                 completionHandler(imageData: nil, error: error)
             } else {
                 completionHandler(imageData: data, error: nil)
@@ -73,13 +73,21 @@ class FlickrClient: NSObject {
     
     // The URL for a flickrImage, using the data a photo entity saves.
     func flickrImageURL(picture: Picture) -> NSURL {
-        return NSURL(string: "http://farm\(picture.farm).staticflickr.com/\(picture.server)/\(picture.id)_\(picture.secret)_m.jpg")!
+		
+		//add "s" to http to correct security protocol error
+		return NSURL(string: "https://farm\(picture.farm).staticflickr.com/\(picture.server)/\(picture.id)_\(picture.secret)_m.jpg")!
     }
 
     
     class func parseJSONWithCompletionHandler(data: NSData, completionHandler: CompletionHander) {
         var parsingError: NSError? = nil
-        let parsedResult: AnyObject? = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError)
+        let parsedResult: AnyObject?
+        do {
+            parsedResult = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments)
+        } catch let error as NSError {
+            parsingError = error
+            parsedResult = nil
+        }
         if let error = parsingError {
             completionHandler(result: nil, error: error)
         } else {
